@@ -1,41 +1,73 @@
 import { useState, useEffect } from 'react';
 
-// TODO: Exercice 3.1 - Créer le hook useDebounce
-// TODO: Exercice 3.2 - Créer le hook useLocalStorage
-
 const useProductSearch = () => {
+  const [page, setPage] = useState(1);
+  const [error, setError] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  // TODO: Exercice 4.2 - Ajouter l'état pour la pagination
+  const [totalPages, setTotalPages] = useState(1);
+
+  const limit = 6;
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const skip = (page - 1) * limit;
+
+      const response = await fetch(
+        `https://api.daaif.net/products?delay=1000&skip=${skip}&limit=${limit}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Erreur réseau');
+      }
+
+      const data = await response.json();
+
+      setProducts(data.products || []);
+
+      if (data.total) {
+        setTotalPages(Math.ceil(data.total / limit));
+      }
+
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        // TODO: Exercice 4.2 - Modifier l'URL pour inclure les paramètres de pagination
-        const response = await fetch('https://api.daaif.net/products?delay=1000');
-        if (!response.ok) throw new Error('Erreur réseau');
-        const data = await response.json();
-        setProducts(data.products);
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
-
     fetchProducts();
-  }, []); // TODO: Exercice 4.2 - Ajouter les dépendances pour la pagination
+  }, [page]);
 
-  // TODO: Exercice 4.1 - Ajouter la fonction de rechargement
-  // TODO: Exercice 4.2 - Ajouter les fonctions pour la pagination
+  const nextPage = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
+  };
 
-  return { 
-    products, 
-    loading, 
+  const previousPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
+
+  const reload = () => {
+    fetchProducts();
+  };
+
+  return {
+    products,
+    loading,
     error,
-    // TODO: Exercice 4.1 - Retourner la fonction de rechargement
-    // TODO: Exercice 4.2 - Retourner les fonctions et états de pagination
+    page,
+    totalPages,
+    nextPage,
+    previousPage,
+    reload,
   };
 };
 

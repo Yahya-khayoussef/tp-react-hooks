@@ -1,44 +1,67 @@
 import React, { useContext } from 'react';
-import { ThemeContext } from '../App';
+import { ThemeContext, LanguageContext } from '../App';
 import useProductSearch from '../hooks/useProductSearch';
 
-const ProductList = () => {
+const ProductList = ({ searchTerm }) => {
   const { isDarkTheme } = useContext(ThemeContext);
-  // TODO: Exercice 2.1 - Utiliser le LanguageContext pour les traductions
-  
-  const { 
-    products, 
-    loading, 
+  const { language } = useContext(LanguageContext);
+
+  const {
+    products,
+    loading,
     error,
-    // TODO: Exercice 4.1 - Récupérer la fonction de rechargement
-    // TODO: Exercice 4.2 - Récupérer les fonctions et états de pagination
+    page,
+    totalPages,
+    nextPage,
+    previousPage,
+    reload,
   } = useProductSearch();
-  
-  if (loading) return (
-    <div className="text-center my-4">
-      <div className="spinner-border" role="status">
-        <span className="visually-hidden">Chargement...</span>
+
+  if (loading) {
+    return (
+      <div className="text-center my-4">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Chargement...</span>
+        </div>
       </div>
-    </div>
-  );
-  
-  if (error) return (
-    <div className="alert alert-danger" role="alert">
-      Erreur: {error}
-    </div>
-  );
-  
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+        Erreur: {error}
+      </div>
+    );
+  }
+
+  const filteredProducts = products.filter((product) => {
+    return (
+      product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  const priceLabel = language === 'fr' ? 'Prix' : 'Price';
+
   return (
     <div>
-      {/* TODO: Exercice 4.1 - Ajouter le bouton de rechargement */}
+      {/* Bouton de rechargement */}
+      <div className="text-end mb-3">
+        <button className="btn btn-secondary" onClick={reload}>
+          {language === 'fr' ? 'Recharger' : 'Reload'}
+        </button>
+      </div>
+
+      {/* Liste de produits */}
       <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        {products.map(product => (
+        {filteredProducts.map((product) => (
           <div key={product.id} className="col">
             <div className={`card h-100 ${isDarkTheme ? 'bg-dark text-light' : ''}`}>
               {product.thumbnail && (
-                <img 
-                  src={product.thumbnail} 
-                  className="card-img-top" 
+                <img
+                  src={product.thumbnail}
+                  className="card-img-top"
                   alt={product.title}
                   style={{ height: '200px', objectFit: 'cover' }}
                 />
@@ -47,7 +70,7 @@ const ProductList = () => {
                 <h5 className="card-title">{product.title}</h5>
                 <p className="card-text">{product.description}</p>
                 <p className="card-text">
-                  <strong>Prix: </strong>
+                  <strong>{priceLabel}: </strong>
                   {product.price}€
                 </p>
               </div>
@@ -55,29 +78,27 @@ const ProductList = () => {
           </div>
         ))}
       </div>
-      
-      {/* TODO: Exercice 4.2 - Ajouter les contrôles de pagination */}
-      {/* Exemple de structure pour la pagination :
+
+      {/* Pagination */}
       <nav className="mt-4">
         <ul className="pagination justify-content-center">
-          <li className="page-item">
+          <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
             <button className="page-link" onClick={previousPage}>
-              Précédent
+              {language === 'fr' ? 'Précédent' : 'Previous'}
             </button>
           </li>
           <li className="page-item">
             <span className="page-link">
-              Page {currentPage} sur {totalPages}
+              Page {page} / {totalPages}
             </span>
           </li>
-          <li className="page-item">
+          <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
             <button className="page-link" onClick={nextPage}>
-              Suivant
+              {language === 'fr' ? 'Suivant' : 'Next'}
             </button>
           </li>
         </ul>
       </nav>
-      */}
     </div>
   );
 };
